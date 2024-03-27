@@ -2,8 +2,9 @@ from random import randint
 from sys import exit
 from os import startfile
 
-def getWord() -> str:
-    wordlist = open('hangManWords.txt', 'r')
+def getWord(wordList: str) -> str:
+    """Opens a list of words then picks a random word and returns that word"""
+    wordlist = open(wordList, 'r')
 
     words = [line for line in wordlist]
 
@@ -13,6 +14,7 @@ def getWord() -> str:
     return randomWord
 
 def wordToLines(word: str) -> list:
+    """Converts the word to a bunch of lines"""
     wordLines: list = []
     wordArray: list = [letter for letter in word]
     for letter in range(len(wordArray)):
@@ -22,6 +24,7 @@ def wordToLines(word: str) -> list:
     return wordLines
 
 def guess(letter: str) -> None:
+    """Takes a guess from the player and adds the guess to an already guessed pool and a wrong guess pool"""
     global guessWord, guessedLetters, hiddenWord, incorrectGuesses, wrongLetters
     if letter in guessedLetters:
         print("You have already guessed that letter")
@@ -37,18 +40,21 @@ def guess(letter: str) -> None:
         incorrectGuesses += 1
 
 def strArrayToText(array: list) -> str:
+    """Converts the array of strings into one single string"""
     strWord = ''
     for i in range(len(array)):
         strWord += array[i]
     return strWord
 
 def wrongLetterToStr(array: list) -> str:
+    """Turns the wrong letter array into a str"""
     strWord = ''
     for i in range(len(array)):
         strWord = strWord + ' ' + array[i]
     return strWord
 
 def again() -> None:
+    """If the player wants to play again, it re-opens the file"""
     while True:
         try:
             answer = True if input("Do you want to play again? Yes or No?").lower()[0] == 'y' else False
@@ -59,9 +65,10 @@ def again() -> None:
             exit(0)
 
         startfile(__file__)
-        exit()
+        exit(0)
 
 def win() -> None:
+    """If the player wins, increase the number in their account by one"""
     winAmount = registeredIndex[username][1] + 1
     registeredIndex[username][1] = winAmount
     loseAmount = registeredIndex[username][2]
@@ -75,6 +82,7 @@ def win() -> None:
     again()
 
 def lose() -> None:
+    """If the player loses, increase the number in their account by one"""
     global guessWord
     file = open('./HangManRegisteredUsers.txt', 'r')
     winAmount = registeredIndex[username][1]
@@ -87,9 +95,9 @@ def lose() -> None:
     again()
 
 def loginSystem() -> None:
-    # keep list of usernames in a dictionary and have an array assigned to the key.
-    # [password -> str, win -> int, lose -> int, logged_in -> bool]
-    # need to do some file handling
+    """A massive thing that lets the player create an account or login to an existing account. Then writes the result to a file
+       registeredIndex: [password -> str, win -> int, lose -> int, logged_in -> bool]"""
+
     global username, password, registeredIndex
     registeredIndex = {}
     try:
@@ -149,11 +157,12 @@ def loginSystem() -> None:
         exit(0)
 
 
+# setting up the basic variables
 guessedLetters:   list = []
 wrongLetters:     list = []
 incorrectGuesses: int  = 0
 
-guessWord:  str  = getWord()
+guessWord:  str  = getWord('hangManWords.txt')
 hiddenWord: list = wordToLines(guessWord)
 
 username: str = ''
@@ -162,27 +171,9 @@ registeredIndex: dict = {str(username): [password, 0, 0, False]}
 
 loops: int = 0
 
+# logging in
 loginSystem()
 while True:
-    if incorrectGuesses >= 6:
-        lose()
-    if strArrayToText(hiddenWord) == guessWord:
-        win()
-
-    if loops == 0:
-        print(strArrayToText(hiddenWord))
-        loops += 1
-
-    guessLetter = input("\nGuess a letter: ").lower()
-    print(hangmanUI[0])
-
-    while len(guessLetter) != 1:
-        if len(guessLetter) > 1:
-            guessLetter = input("\nYou provided two letters instead of one. Guess a letter: ").lower()
-        elif len(guessLetter) == 0:
-            guessLetter = input("\nYou didn't provide a letter. Guess a letter: ").lower()
-
-    guess(guessLetter)
 
     hangmanUI = [f" HANGMAN \n"
                  f"  ____   Wrong Letters:\n"
@@ -235,3 +226,21 @@ while True:
                  f"{strArrayToText(hiddenWord)}"]
 
     print(hangmanUI[incorrectGuesses])
+
+    if incorrectGuesses >= 6:
+        lose()
+    if strArrayToText(hiddenWord) == guessWord:
+        win()
+
+    if loops == 0:
+        loops += 1
+
+    guessLetter = input("\nGuess a letter: ").lower()
+
+    while len(guessLetter) != 1:
+        if len(guessLetter) > 1:
+            guessLetter = input("\nYou provided two letters instead of one. Guess a letter: ").lower()
+        elif len(guessLetter) == 0:
+            guessLetter = input("\nYou didn't provide a letter. Guess a letter: ").lower()
+
+    guess(guessLetter)
