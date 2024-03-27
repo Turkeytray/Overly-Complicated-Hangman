@@ -1,4 +1,4 @@
-import random
+from random import randint
 from sys import exit
 from os import startfile
 
@@ -7,7 +7,7 @@ def getWord() -> str:
 
     words = [line for line in wordlist]
 
-    randomWord = words[random.randint(0, len(words) - 1)].strip().lower()
+    randomWord = words[randint(0, len(words) - 1)].strip().lower()
     wordlist.close()
 
     return randomWord
@@ -21,15 +21,14 @@ def wordToLines(word: str) -> list:
 
     return wordLines
 
-def guess(letter: str):
+def guess(letter: str) -> None:
     global guessWord, guessedLetters, hiddenWord, incorrectGuesses, wrongLetters
-
     if letter in guessedLetters:
         print("You have already guessed that letter")
     elif letter in guessWord:
         for i in range(len(guessWord)):
             if guessWord[i] == letter:
-                hiddenWord[i] = letter
+                hiddenWord[i] = letter  # I have no idea how to lose one indent
 
         guessedLetters.append(letter)
     else:
@@ -52,26 +51,17 @@ def wrongLetterToStr(array: list) -> str:
 def again() -> None:
     while True:
         try:
-            answer = input("Do you want to play again? ").lower()[0]
-            break
+            answer = True if input("Do you want to play again? Yes or No?").lower()[0] == 'y' else False
         except IndexError:
             continue
-    while True:
-        if answer == 'y':
-            startfile(__file__)
-            exit()
-        elif answer == 'n':
+
+        if not answer:
             exit(0)
-        else:
-            while True:
-                try:
-                    answer = input("You didn't provide a proper answer. Yes or No?").lower()[0]
-                    break
-                except IndexError:
-                    continue
+
+        startfile(__file__)
+        exit()
 
 def win() -> None:
-    file = open('./HangManRegisteredUsers.txt', 'r')
     winAmount = registeredIndex[username][1] + 1
     registeredIndex[username][1] = winAmount
     loseAmount = registeredIndex[username][2]
@@ -80,8 +70,8 @@ def win() -> None:
     except ZeroDivisionError:
         winrate = winAmount
     print(f"\nYou Win! You have won {winAmount} times! You have lost {loseAmount} times\nYou have a win to lose rate of {winrate:.2f}\n")
-    file = open('./HangManRegisteredUsers.txt', 'w')
-    file.write(str(registeredIndex))
+    with open('./HangManRegisteredUsers.txt', 'w') as file:
+        file.write(str(registeredIndex))
     again()
 
 def lose() -> None:
@@ -114,33 +104,35 @@ def loginSystem() -> None:
 
     # testing to see if someone is logged in and then leaving the function
     for keys in registeredIndex:
-        if registeredIndex[keys][3] is True:
-            username = keys
+        if registeredIndex[keys][3] is not True:
+            continue
+        username = keys
+        try:
             signOut = True if input('Do you want to sign out? ').lower()[0] == 'y' else False
-            if signOut:
-                registeredIndex[keys][3] = False
-                username = ''
-                file = open('./HangManRegisteredUsers.txt', 'w')
-                file.write(str(registeredIndex))
-                exit(0)
-            return
+        except IndexError:
+            signOut = False
+        if signOut:
+            registeredIndex[keys][3] = False
+            username = ''
+            file = open('./HangManRegisteredUsers.txt', 'w')
+            file.write(str(registeredIndex))
+            exit(0)
+        return
 
     login = True if input("Do you want to login or create an account? ").lower()[0] == 'l' else False
     while login:
         username = input("Username: ").lower()
-        if username in registeredIndex:
-            password = input("Password: ")
-            while True:
-                if password == registeredIndex[username][0]:
-                    print("You have successfully logged in")
-                    registeredIndex[username][3] = True
-                    return
-                else:
-                    password = input("Incorrect Password. Please try again: ")
-        else:
+        if username not in registeredIndex:
             print("We could not find you. Please create an account.")
             username = ''
             login = False
+            break
+        password = input("Password: ")
+        while password != registeredIndex[username][0]:
+            password = input("Incorrect Password. Please try again: ")
+        print("You have successfully logged in")
+        registeredIndex[username][3] = True
+        return
 
     while not login:
         username = input("Create a username: ").lower()
@@ -182,6 +174,7 @@ while True:
         loops += 1
 
     guessLetter = input("\nGuess a letter: ").lower()
+    print(hangmanUI[0])
 
     while len(guessLetter) != 1:
         if len(guessLetter) > 1:
@@ -242,5 +235,3 @@ while True:
                  f"{strArrayToText(hiddenWord)}"]
 
     print(hangmanUI[incorrectGuesses])
-    # print(f"Wrong Guesses: {wrongLetterToStr(wrongLetters)}")
-    # print(strArrayToText(hiddenWord))
